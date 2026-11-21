@@ -2,6 +2,8 @@
 
 **Stocks close at 4pm. Their tokens on Base don't.**
 
+**Live:** https://after-hours-public.vercel.app · first attributed swap: [5 USDC → NVDAc](https://basescan.org/tx/0x6020cbbf8fb2e26d98b971c2b4524e45cdda1f2cc2495d40b9cf2e5149a8b221) (builder-code test by the author, not user traction)
+
 After Hours shows where each Coinbase tokenized stock is trading on Base right now, compared with the Chainlink price that froze when the US market shut, and lets non-US holders act on that gap with one swap.
 
 Built for Base **Stocks Maxxing** (Programmable Stock Markets track).
