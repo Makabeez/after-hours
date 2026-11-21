@@ -24,6 +24,10 @@ Yes, mostly. Over 12 weekends since launch, the weekend move on Hyperliquid pred
 
 ![Weekend move vs Monday move](research/weekend-gap-study.png)
 
+## Live track record
+
+Every weekday a GitHub Action saves the board a few minutes before the US open and scores it one hour after (`.github/workflows/scorecard.yml`). Results are committed to [`public/data/`](public/data/) and shown on the site, so the track record is public and can't be edited after the fact without leaving a commit.
+
 ## Try it in one command (no wallet, no keys)
 
 ```bash

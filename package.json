@@ -4,5 +4,7 @@
   "type": "module",
   "engines": { "node": ">=18" },
   "scripts": { "judge": "node scripts/judge.mjs",
-    "dev": "node scripts/dev.mjs" }
+    "dev": "node scripts/dev.mjs",
+    "predict": "node scripts/scorecard.mjs predict",
+    "score": "node scripts/scorecard.mjs score" }
 }

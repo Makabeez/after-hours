@@ -181,4 +181,13 @@ fetch('/api/geo').then(r => r.json()).then(g => {
   if (g.country === 'US') $('#status').textContent = 'Trading is turned off for visitors in the United States. The board stays readable.';
   if (state.board) render();
 }).catch(() => {});
-load(); setInterval(load, 30e3); setInterval(tickClock, 30e3);
+async function loadRecord() {
+  try {
+    const r = await fetch('/data/scorecard.json', { cache: 'no-store' }); if (!r.ok) return;
+    const card = await r.json(), t = card.total; if (!t) return;
+    $('#record-text').innerHTML = `Across <b>${t.opens} US open${t.opens > 1 ? 's' : ''}</b> so far, the overnight gap missed the price one hour after the open by <b>${t.meanError.toFixed(2)} points</b> on average, against ${t.naiveError.toFixed(2)} for assuming nothing moved. Direction right on ${t.direction} moves of 0.5% or more.`;
+    $('#record-days').innerHTML = card.days.slice(-7).reverse().map(d =>
+      `<li><span>${new Date(d.date + 'T12:00:00Z').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span><span>off by ${d.meanError.toFixed(2)} pts vs ${d.naiveError.toFixed(2)} naive</span><span>direction ${d.direction}</span></li>`).join('');
+  } catch { /* keep the default explanation */ }
+}
+load(); loadRecord(); setInterval(load, 30e3); setInterval(tickClock, 30e3);
