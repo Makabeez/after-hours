@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>After Hours: where your stock trades while Wall Street sleeps</title>
+<meta name="description" content="Live gap between the frozen Chainlink price and the live Base price of Coinbase tokenized stocks, overnight and on weekends.">
+<meta property="og:title" content="After Hours">
+<meta property="og:description" content="Stocks close at 4pm. Their tokens on Base don't. See the gap, then trade it.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2310142B'/%3E%3Cpath d='M6 20h20' stroke='%23AFC8FF' stroke-width='2.5' stroke-linecap='round'/%3E%3Ccircle cx='22' cy='20' r='4.5' fill='%23F4A53C'/%3E%3C/svg%3E">
+</head>
+<body>
+<a class="skip" href="#board">Skip to the board</a>
+<header class="top wrap">
+  <a class="brand" href="/" aria-label="After Hours home"><span class="mark" aria-hidden="true"><i></i><b></b></span>After Hours</a>
+  <button id="connect" class="btn ghost" type="button">Connect wallet</button>
+</header>
+
+<main class="wrap">
+  <section class="hero" aria-live="polite">
+    <p id="clock" class="clock">Checking the US market clock…</p>
+    <h1 id="headline">Reading the overnight market…</h1>
+    <p id="subline" class="sub"></p>
+  </section>
+
+  <section id="board" class="board" aria-label="Gap board">
+    <div class="legend" aria-hidden="true">
+      <span><i class="tick"></i>Frozen price: the last Chainlink update before the market shut</span>
+      <span><i class="dot"></i>Live price on Base (Aerodrome)</span>
+      <span><i class="ring"></i>Hyperliquid perp, same move</span>
+    </div>
+    <ol id="rows" class="rows"></ol>
+    <p id="status" class="status" role="status"></p>
+  </section>
+
+  <section class="about">
+    <h2>How to read this</h2>
+    <p>Coinbase tokenized stocks trade on Base around the clock, but the Chainlink price most apps use stops moving when the US market closes. The gap between that frozen price and what people pay on Base right now is the market's guess at Monday's open. Hyperliquid's stock perps trade 24/7 too, so when both venues agree, the move is probably real.</p>
+    <p>Trading is available only to people outside the United States, in places where these tokens are legal. Swaps route through KyberSwap and carry an onchain attribution tag for this app. Nothing here is investment advice.</p>
+  </section>
+</main>
+
+<footer class="wrap foot">
+  <span>Prices: Chainlink on Base, Aerodrome via DexScreener, Hyperliquid xyz perps.</span>
+  <a href="https://github.com/Makabeez/after-hours" rel="noopener">Source on GitHub</a>
+</footer>
+
+<dialog id="trade" class="trade" aria-labelledby="trade-title">
+  <form method="dialog" id="trade-form">
+    <header><h2 id="trade-title">Trade</h2><button class="x" value="cancel" aria-label="Close">×</button></header>
+    <div class="side" role="radiogroup" aria-label="Direction">
+      <label><input type="radio" name="side" value="buy" checked> Buy</label>
+      <label><input type="radio" name="side" value="sell"> Sell</label>
+    </div>
+    <label class="field"><span id="amount-label">Pay (USDC)</span><input id="amount" inputmode="decimal" autocomplete="off" placeholder="25"></label>
+    <p id="quote" class="quote">Enter an amount to see a quote.</p>
+    <label class="check"><input type="checkbox" id="eligible"> I am not a US person, and tokenized stocks are legal where I live.</label>
+    <p id="trade-msg" class="msg" role="status"></p>
+    <button id="go" class="btn" type="button" disabled>Get quote</button>
+  </form>
+</dialog>
+<script src="/app.js" type="module"></script>
+</body>
+</html>
