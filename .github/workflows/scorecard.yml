@@ -1,11 +1,13 @@
 name: Open scorecard
-# 14:20 UTC = 9:20 ET (winter): save the board before the open.
-# 15:30 UTC = 10:30 ET: score it one hour after the open.
-# Shift both by -1h when US daylight time starts (Mar 8, 2027).
+# Save the board twice before the 14:30 UTC open (13:45, 14:10) because scheduled runs can start late;
+# the later snapshot wins as long as it is still before the open. Score twice after (15:35, 16:00); the second is a no-op.
+# Shift all by -1h when US daylight time starts (Mar 8, 2027).
 on:
   schedule:
-    - cron: '20 14 * * 1-5'
-    - cron: '30 15 * * 1-5'
+    - cron: '45 13 * * 1-5'
+    - cron: '10 14 * * 1-5'
+    - cron: '35 15 * * 1-5'
+    - cron: '0 16 * * 1-5'
   workflow_dispatch:
     inputs:
       mode: { description: 'predict or score', required: true, default: 'predict' }
@@ -23,7 +25,10 @@ jobs:
         run: |
           MODE="${{ github.event.inputs.mode }}"
           if [ -z "$MODE" ]; then
-            if [ "${{ github.event.schedule }}" = "20 14 * * 1-5" ]; then MODE=predict; else MODE=score; fi
+            case "${{ github.event.schedule }}" in
+              "45 13 * * 1-5"|"10 14 * * 1-5") MODE=predict ;;
+              *) MODE=score ;;
+            esac
           fi
           node scripts/scorecard.mjs "$MODE"
       - name: Commit results

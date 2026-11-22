@@ -13,7 +13,9 @@ const readJson = async (p, d) => { try { return JSON.parse(await readFile(p, 'ut
 if (mode === 'predict') {
   const c = marketClock(NOW);
   if (c.open || !c.nextOpen || c.nextOpen - NOW > 3 * 3600e3) { console.log('No open within 3h; nothing to predict.'); process.exit(0); }
-  const b = await board(), date = nyDate(c.nextOpen);
+  const date = nyDate(c.nextOpen);
+  if ((await readJson(`${daysDir}/${date}.json`, {})).scoredAt) { console.log(`${date} already scored; keeping it.`); process.exit(0); }
+  const b = await board();
   const rows = b.rows.filter(r => r.gap != null).map(r => ({ t: r.t, frozen: r.close, frozenAt: r.closeUpdatedAt, base: r.base, gap: r.gap, hlMark: r.hlMark, hlMove: r.hlMove }));
   await writeFile(`${daysDir}/${date}.json`, JSON.stringify({ date, opensAt: c.nextOpen, predictedAt: b.generatedAt, rows }, null, 2) + '\n');
   console.log(`Saved prediction for ${date}: ${rows.length} stocks`);
