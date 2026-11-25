@@ -21,7 +21,9 @@ if (mode === 'predict') {
   console.log(`Saved prediction for ${date}: ${rows.length} stocks`);
 } else if (mode === 'score') {
   const c = marketClock(NOW);
-  const date = nyDate(c.open ? c.sessionOpen : c.lastClose);
+  // Only score while the session is 50-120 min old: a late run must never score with prices from hours later.
+  if (!c.open || NOW - c.sessionOpen < 50 * 60e3 || NOW - c.sessionOpen > 120 * 60e3) { console.log('Outside the scoring window (50-120 min after the open); skipping.'); process.exit(0); }
+  const date = nyDate(c.sessionOpen);
   const day = await readJson(`${daysDir}/${date}.json`, null);
   if (!day) { console.log(`No prediction saved for ${date}.`); process.exit(0); }
   if (day.scoredAt) { console.log(`${date} already scored.`); process.exit(0); }

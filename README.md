@@ -26,7 +26,7 @@ Yes, mostly. Over 12 weekends since launch, the weekend move on Hyperliquid pred
 
 ## Live track record
 
-Every weekday a GitHub Action saves the board a few minutes before the US open and scores it one hour after (`.github/workflows/scorecard.yml`). Results are committed to [`public/data/`](public/data/) and shown on the site, so the track record is public and can't be edited after the fact without leaving a commit.
+Every weekday the board is saved a few minutes before the US open and scored one hour after by `scripts/scorecard-daemon.mjs`, running under PM2 on an always-on machine. (GitHub's scheduler was tried first and started jobs 9-11 hours late, so it is now a manual fallback only.) Results are committed to [`public/data/`](public/data/) and shown on the site, so the track record is public and can't be edited after the fact without leaving a commit.
 
 ## Try it in one command (no wallet, no keys)
 

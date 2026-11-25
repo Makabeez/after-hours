@@ -1,13 +1,8 @@
-name: Open scorecard
-# Save the board twice before the 14:30 UTC open (13:45, 14:10) because scheduled runs can start late;
-# the later snapshot wins as long as it is still before the open. Score twice after (15:35, 16:00); the second is a no-op.
-# Shift all by -1h when US daylight time starts (Mar 8, 2027).
+name: Open scorecard (manual fallback)
+# Scheduled runs were removed: GitHub started them 9-11 hours late on Nov 23-24, after the market had closed.
+# The scorecard runs on time from scripts/scorecard-daemon.mjs (PM2 on an always-on machine).
+# This workflow stays as a manual fallback; scorecard.mjs refuses to predict after the open or score outside 50-120 min after it.
 on:
-  schedule:
-    - cron: '45 13 * * 1-5'
-    - cron: '10 14 * * 1-5'
-    - cron: '35 15 * * 1-5'
-    - cron: '0 16 * * 1-5'
   workflow_dispatch:
     inputs:
       mode: { description: 'predict or score', required: true, default: 'predict' }
@@ -21,20 +16,11 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '20' }
-      - name: Run
-        run: |
-          MODE="${{ github.event.inputs.mode }}"
-          if [ -z "$MODE" ]; then
-            case "${{ github.event.schedule }}" in
-              "45 13 * * 1-5"|"10 14 * * 1-5") MODE=predict ;;
-              *) MODE=score ;;
-            esac
-          fi
-          node scripts/scorecard.mjs "$MODE"
+      - run: node scripts/scorecard.mjs "${{ github.event.inputs.mode }}"
       - name: Commit results
         run: |
           git config user.name "after-hours-bot"
           git config user.email "after-hours-bot@users.noreply.github.com"
           git add public/data
-          git diff --cached --quiet || git commit -m "scorecard: $(date -u +%Y-%m-%d) ${{ github.event.inputs.mode || 'scheduled' }}"
+          git diff --cached --quiet || git commit -m "scorecard: manual ${{ github.event.inputs.mode }}"
           git push
