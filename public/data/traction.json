@@ -1,0 +1,37 @@
+{
+  "builderCode": "bc_il5mvrgl",
+  "since": "2026-11-21",
+  "users": {
+    "swaps": 0,
+    "wallets": 0,
+    "volumeUsd": 0
+  },
+  "author": {
+    "swaps": 2,
+    "wallets": 2,
+    "volumeUsd": 11
+  },
+  "swaps": [
+    {
+      "time": "2026-11-21T21:53:24.000Z",
+      "block": 60538146,
+      "hash": "0x6020cbbf8fb2e26d98b971c2b4524e45cdda1f2cc2495d40b9cf2e5149a8b221",
+      "wallet": "0x054e3cc9469743df5aa3ee4e9bab4612901b4e42",
+      "side": "buy",
+      "t": "NVDA",
+      "usdc": 5,
+      "author": true
+    },
+    {
+      "time": "2026-11-21T21:59:25.000Z",
+      "block": 60539948,
+      "hash": "0xa993c56f73d68625927235229a1a3fe2b2d381c49e0923efa8b27d21c7749c56",
+      "wallet": "0x1bce0d52081b68b81e84193b5644af8b9a552d19",
+      "side": "buy",
+      "t": "NVDA",
+      "usdc": 6,
+      "author": true
+    }
+  ],
+  "method": "KyberSwap router calls on Base touching the 10 stock tokens, whose calldata ends with the ERC-8021 suffix for bc_il5mvrgl. Reproduce: npm run traction."
+}

@@ -4,7 +4,9 @@ const USDC = '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913';
 const KYBER = 'https://aggregator-api.kyberswap.com/base/api/v1';
 const BASE_HEX = '0x2105';
 const $ = s => document.querySelector(s);
-let state = { board: null, account: null, country: null, sel: null, quote: null };
+let state = { board: null, account: null, country: null, sel: null, quote: null, mini: null, provider: null };
+const SITE = 'https://after-hours-public.vercel.app';
+const focusT = (new URLSearchParams(location.search).get('t') || '').toUpperCase();
 
 // ---------- ERC-8021 attribution suffix: codes ‖ codesLength ‖ schemaId(0) ‖ 16-byte marker
 const hexOf = s => [...s].map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
@@ -57,8 +59,11 @@ function render() {
       li.innerHTML = `<div class="who"><b>${r.t}</b><span>${r.name}</span></div>
         <div class="track" role="img"><div class="axis"></div><div class="span"></div><div class="tick"></div><div class="hl"></div><div class="live"></div><span class="lbl l1"></span></div>
         <div class="gap"><b></b><span></span></div>
-        <button class="btn ghost trade-btn" type="button" aria-label="Trade ${r.name}">Trade</button>`;
+        <div class="acts"><button class="icon share-btn" type="button" aria-label="Share ${r.name}" title="Share"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button class="btn ghost trade-btn" type="button" aria-label="Trade ${r.name}">Trade</button></div>`;
       li.querySelector('.trade-btn').addEventListener('click', () => openTrade(r.t));
+      li.querySelector('.share-btn').addEventListener('click', () => share(r.t));
+      if (r.t === focusT) { li.classList.add('focus'); requestAnimationFrame(() => li.scrollIntoView({ block: 'center' })); }
       ol.appendChild(li);
     }
     const ok = r.gap != null;
@@ -87,7 +92,7 @@ function tickClock() {
 }
 
 // ---------- wallet
-const eth = () => window.ethereum;
+const eth = () => state.provider || window.ethereum;
 async function rpc(method, params = []) { return eth().request({ method, params }); }
 async function connect() {
   if (!eth()) { alertMsg('Install a Base-compatible wallet such as Coinbase Wallet or Rabby to trade.'); return null; }
@@ -163,6 +168,52 @@ async function execute() {
   state.quote = null; $('#go').textContent = 'Get quote';
 }
 
+// ---------- sharing: /s/TICKER previews as a live card on X, Farcaster, Telegram and Discord
+function shareText(r) {
+  const c = state.board.clock;
+  if (r.gap == null) return `${r.name} on Base, live against the frozen Chainlink price.`;
+  const head = c.open ? `${r.name} on Base is ${pct(r.gap)} against the latest Chainlink price.`
+    : `${r.name} is trading ${Math.abs(r.gap).toFixed(2)}% ${r.gap >= 0 ? 'above' : 'below'} where Wall Street left it.`;
+  const hl = r.hlMove != null && !c.open ? ` Hyperliquid's perp moved ${pct(r.hlMove)} over the same stretch.` : '';
+  return head + hl;
+}
+async function share(t) {
+  const r = state.board.rows.find(x => x.t === t), url = `${SITE}/s/${t}`, text = shareText(r);
+  if (state.mini) { try { await state.mini.actions.composeCast({ text, embeds: [url] }); return; } catch { /* fall back to the sheet */ } }
+  if (navigator.share && matchMedia('(pointer:coarse)').matches) { try { await navigator.share({ text, url }); return; } catch (e) { if (e?.name === 'AbortError') return; } }
+  const enc = encodeURIComponent;
+  $('#share-title').textContent = `Share ${r.name}`;
+  $('#share-preview').src = `/api/card?t=${t}&v=${Math.floor(Date.now() / 6e5)}`;
+  $('#share-preview').alt = text;
+  $('#share-x').href = `https://x.com/intent/post?text=${enc(text)}&url=${enc(url)}`;
+  $('#share-fc').href = `https://farcaster.xyz/~/compose?text=${enc(text)}&embeds[]=${enc(url)}`;
+  $('#share-copy').onclick = async () => { try { await navigator.clipboard.writeText(`${text} ${url}`); $('#share-copy').textContent = 'Copied'; } catch { $('#share-copy').textContent = url; } };
+  $('#share-copy').textContent = 'Copy link';
+  $('#share').showModal();
+}
+
+// ---------- inside Farcaster or the Base App: use the host wallet and dismiss the splash screen
+async function initMiniApp() {
+  if (window.parent === window && !window.ReactNativeWebView) return;
+  try {
+    const { sdk } = await import('https://esm.sh/@farcaster/miniapp-sdk@0.4.0');
+    if (!(await sdk.isInMiniApp())) return;
+    state.mini = sdk;
+    try { state.provider = await sdk.wallet.getEthereumProvider(); } catch { /* no host wallet: board stays read-only */ }
+    await sdk.actions.ready();
+  } catch { /* not a mini app host */ }
+}
+
+// ---------- swaps through this board, counted onchain by scripts/traction.mjs
+async function loadTraction() {
+  try {
+    const r = await fetch('/data/traction.json', { cache: 'no-store' }); if (!r.ok) return;
+    const d = await r.json(); if (!d.users?.swaps) return;
+    $('#traction').textContent = `${d.users.swaps} swap${d.users.swaps > 1 ? 's' : ''} by ${d.users.wallets} wallet${d.users.wallets > 1 ? 's' : ''} so far through this board, worth $${Math.round(d.users.volumeUsd).toLocaleString('en-US')}, counted onchain from the builder code. The author's own test swaps are left out.`;
+    $('#traction').hidden = false;
+  } catch { /* optional */ }
+}
+
 // ---------- wiring
 $('#connect').addEventListener('click', () => connect().catch(e => console.warn(e)));
 document.querySelectorAll('input[name=side]').forEach(i => i.addEventListener('change', syncSide));
@@ -190,4 +241,4 @@ async function loadRecord() {
       `<li><span>${new Date(d.date + 'T12:00:00Z').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</span><span>off by ${d.meanError.toFixed(2)} pts vs ${d.naiveError.toFixed(2)} naive</span><span>direction ${d.direction}</span></li>`).join('');
   } catch { /* keep the default explanation */ }
 }
-load(); loadRecord(); setInterval(load, 30e3); setInterval(tickClock, 30e3);
+initMiniApp(); load(); loadRecord(); loadTraction(); setInterval(load, 30e3); setInterval(tickClock, 30e3);

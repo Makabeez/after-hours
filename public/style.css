@@ -37,7 +37,7 @@ h1 .num{color:var(--amber)}
 .legend .ring{width:11px;height:11px;border-radius:50%;box-shadow:inset 0 0 0 2px var(--muted)}
 
 .rows{list-style:none;margin:0;padding:0}
-.row{display:grid;grid-template-columns:132px 1fr 170px 92px;gap:20px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
+.row{display:grid;grid-template-columns:132px 1fr 170px auto;gap:20px;align-items:center;padding:18px 0;border-bottom:1px solid var(--line)}
 .who b{display:block;font:700 19px/1.2 var(--display)} .who span{color:var(--muted);font-size:14px}
 .track{position:relative;height:50px}
 .track .axis{position:absolute;left:0;right:0;top:31px;height:2px;background:var(--line);border-radius:2px}
@@ -48,7 +48,12 @@ h1 .num{color:var(--amber)}
 .track .lbl{position:absolute;top:0;font-size:12px;color:var(--muted);transform:translateX(-50%);white-space:nowrap}
 .gap{text-align:right}
 .gap b{display:block;font:600 22px/1.1 var(--body);color:var(--amber)} .gap span{color:var(--muted);font-size:13px}
-.row .btn{padding:10px 16px;font-size:14px;justify-self:end}
+.row .btn{padding:10px 16px;font-size:14px}
+.acts{display:flex;gap:8px;justify-self:end;align-items:center}
+.icon{display:grid;place-items:center;width:38px;height:38px;border-radius:50%;border:0;background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1.5px var(--line);cursor:pointer}
+.icon:hover{color:var(--text);box-shadow:inset 0 0 0 1.5px var(--ice)}
+.row.focus{background:linear-gradient(90deg,rgba(244,165,60,.09),transparent 70%);box-shadow:inset 3px 0 0 var(--amber);padding-left:14px}
+.traction{color:#C9C6DA;font-size:15px;margin:18px 0 0}
 .row.stale .gap b{color:var(--muted)}
 
 .status{color:var(--muted);font-size:14px;min-height:1.5em;margin:14px 0 0}
@@ -83,10 +88,15 @@ h1 .num{color:var(--amber)}
 .check input{margin-top:3px;accent-color:var(--amber)}
 .msg{font-size:14px;min-height:1.4em;color:var(--muted)} .msg.err{color:var(--warn)}
 .trade .btn{width:100%}
+.share{width:min(560px,94vw)}
+.preview{display:block;width:100%;height:auto;border-radius:10px;border:1px solid var(--line);background:var(--night);aspect-ratio:1200/630}
+.share-acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px}
+.share-acts .btn{width:auto;text-align:center;text-decoration:none;padding:12px 10px;font-size:14px}
 
 @media (max-width:760px){
   .row{grid-template-columns:1fr auto;grid-template-areas:"who gap" "track track" "btn btn";gap:10px 16px}
-  .who{grid-area:who} .gap{grid-area:gap} .track{grid-area:track} .row .btn{grid-area:btn;justify-self:stretch}
+  .who{grid-area:who} .gap{grid-area:gap} .track{grid-area:track} .acts{grid-area:btn;justify-self:stretch} .acts .trade-btn{flex:1}
+  .share-acts{grid-template-columns:1fr}
   .hero{padding:32px 0 28px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}

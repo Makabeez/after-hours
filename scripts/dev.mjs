@@ -1,13 +1,19 @@
-// Local preview: serves public/ and the /api routes the same way Vercel does.
+// Local preview: serves public/ and the /api routes the same way Vercel does (including the /s/:t rewrite).
 import http from 'node:http'; import { readFile } from 'node:fs/promises'; import path from 'node:path';
 const root = path.resolve('public'), port = process.env.PORT || 3000;
-const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.svg': 'image/svg+xml', '.png': 'image/png' };
+const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png' };
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
+  const share = url.pathname.match(/^\/s\/([A-Za-z]+)$/);
+  if (share) { url.pathname = '/api/share'; url.searchParams.set('t', share[1]); }
   if (url.pathname.startsWith('/api/')) {
-    const mod = await import(path.resolve('api', url.pathname.slice(5) + '.js') + '?t=' + Date.now());
-    const shim = { setHeader: (k, v) => res.setHeader(k, v), status: c => ({ json: o => { res.writeHead(c, { 'content-type': 'application/json' }); res.end(JSON.stringify(o)); } }) };
-    return mod.default({ headers: req.headers, query: Object.fromEntries(url.searchParams) }, shim);
+    const name = url.pathname.slice(5);
+    if (!/^[a-z]+$/.test(name)) { res.writeHead(404); return res.end(); }
+    const mod = await import(path.resolve('api', name + '.js') + '?t=' + Date.now());
+    res.status = c => { res.statusCode = c; return res; };
+    res.json = o => { res.setHeader('content-type', 'application/json'); res.end(JSON.stringify(o)); };
+    res.send = b => res.end(b);
+    return mod.default({ headers: req.headers, query: Object.fromEntries(url.searchParams) }, res);
   }
   const file = path.join(root, url.pathname === '/' ? 'index.html' : url.pathname);
   if (!file.startsWith(root)) { res.writeHead(403); return res.end(); }

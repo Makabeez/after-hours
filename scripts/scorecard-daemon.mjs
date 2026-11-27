@@ -1,5 +1,6 @@
 // Runs the scorecard on time from an always-on machine (GitHub's scheduler can start jobs hours late).
 // Predicts 5-15 min before each US open, scores 60-90 min after, then commits public/data and pushes.
+// Every hour it also counts builder-code swaps onchain (scripts/traction.mjs) and commits only when a new one appears.
 // Start: pm2 start scripts/scorecard-daemon.mjs --name after-hours-scorecard && pm2 save
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
@@ -10,8 +11,8 @@ const nyDate = ms => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_Y
 const log = (...a) => console.log(new Date().toISOString(), ...a);
 const exists = async p => { try { return JSON.parse(await readFile(p, 'utf8')); } catch { return null; } };
 
-async function sh(cmd, args) {
-  const { stdout, stderr } = await run(cmd, args, { timeout: 120e3 });
+async function sh(cmd, args, timeout = 120e3) {
+  const { stdout, stderr } = await run(cmd, args, { timeout });
   return (stdout + stderr).trim();
 }
 async function commit(msg) {
@@ -24,7 +25,18 @@ async function commit(msg) {
     log(await sh('git', ['push', '-q']) || 'pushed');
   } catch (e) { log('git failed:', e.message); }
 }
+let lastTraction = 0, busy = false;
+async function traction() {
+  lastTraction = Date.now();
+  const out = await sh('node', ['scripts/traction.mjs'], 15 * 60e3);
+  log(out.split('\n').slice(0, 2).join(' | '));
+  if (out.includes('CHANGED')) await commit('traction: new swap through the board, counted onchain');
+}
 async function tick() {
+  if (busy) return; busy = true;
+  try { await step(); } finally { busy = false; }
+}
+async function step() {
   const now = Date.now(), c = marketClock(now);
   if (!c.open && c.nextOpen) {
     const mins = (c.nextOpen - now) / 60e3, date = nyDate(c.nextOpen), day = await exists(`public/data/days/${date}.json`);
@@ -42,6 +54,7 @@ async function tick() {
       await commit(`scorecard: ${date} open scored`);
     }
   }
+  if (now - lastTraction > 60 * 60e3) await traction().catch(e => log('traction failed:', e.message));
 }
 log('scorecard daemon started');
 await tick().catch(e => log('tick error:', e.message));

@@ -28,12 +28,21 @@ Yes, mostly. Over 12 weekends since launch, the weekend move on Hyperliquid pred
 
 Every weekday the board is saved a few minutes before the US open and scored one hour after by `scripts/scorecard-daemon.mjs`, running under PM2 on an always-on machine. (GitHub's scheduler was tried first and started jobs 9-11 hours late, so it is now a manual fallback only.) Results are committed to [`public/data/`](public/data/) and shown on the site, so the track record is public and can't be edited after the fact without leaving a commit.
 
+## Share a gap
+
+Every row has a share button. Each stock has its own link, such as [`/s/NVDA`](https://after-hours-public.vercel.app/s/NVDA). On X, Telegram and Discord the link previews as a card rendered from live prices (`api/card.js`, refreshed every few minutes). On Farcaster and in the Base App it becomes a mini app embed: the button opens the board inside the feed and swaps use the host wallet.
+
+## Usage, counted onchain
+
+`npm run traction` scans Base for every KyberSwap swap of the 10 stocks whose calldata ends with the builder-code suffix, and writes [`public/data/traction.json`](public/data/traction.json). The author's own wallets are listed in the script and counted separately as tests, never as users. The daemon reruns it hourly and commits only when a new swap appears. Anyone can rerun it with no keys and get the same list.
+
 ## Try it in one command (no wallet, no keys)
 
 ```bash
 git clone https://github.com/Makabeez/after-hours && cd after-hours
 npm run judge      # prints the live gap board in your terminal, Node 18+
-npm run dev        # local site on http://localhost:3000
+npm run dev        # local site on http://localhost:3000 (run npm install first for the share cards)
+npm run traction   # every swap made through the board, read from Base
 ```
 
 ## How trading works
@@ -53,11 +62,13 @@ Trading is turned off for visitors in the United States (Vercel geo header), and
 | Hyperliquid move | Real: `xyz:` perp marks and 5-minute candles |
 | Swaps | Real: KyberSwap routes on Base mainnet, signed by the user's own wallet |
 | Builder-code attribution | Real: ERC-8021 suffix appended to calldata |
+| Usage count | Real: read from Base by `npm run traction`; author tests labelled and excluded |
+| Share cards | Real: rendered from the live board |
 | Weekend-gap study | Real historical data (12 weekends). Results, method and limits in [`research/`](research/) |
 
 ## Stack
 
-Static page (`public/`) plus two Vercel functions (`api/board.js`, `api/geo.js`). No framework, no database, no API keys. `api/_lib.js` holds every data source and the NYSE calendar.
+Static page (`public/`) plus four Vercel functions: `api/board.js` (prices), `api/geo.js` (US check), `api/card.js` (share image, `@vercel/og`) and `api/share.js` (link previews and the Farcaster embed). No framework, no database, no API keys. Card fonts are Bricolage Grotesque and IBM Plex Sans, both under the SIL Open Font License (`api/_fonts/`). `api/_lib.js` holds every data source and the NYSE calendar.
 
 ## Not investment advice
 

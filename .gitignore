@@ -2,3 +2,4 @@ node_modules/
 .vercel/
 shot_*.png
 .env*
+.traction-state.json
