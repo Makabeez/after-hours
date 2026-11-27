@@ -1,0 +1,19 @@
+{
+  "days": [
+    {
+      "date": "2026-11-27",
+      "n": 10,
+      "meanError": 1.59,
+      "naiveError": 1.59,
+      "direction": "4/6"
+    }
+  ],
+  "total": {
+    "opens": 1,
+    "observations": 10,
+    "meanError": 1.59,
+    "naiveError": 1.59,
+    "direction": "4/6"
+  },
+  "updatedAt": 1795793405757
+}
